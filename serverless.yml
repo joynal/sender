@@ -1,0 +1,49 @@
+service: gcp-rnd
+
+provider:
+  name: google
+  runtime: go111
+  project: adept-mountain-238503
+  credentials: ~/.gcloud/keyfile.json
+  stage: ${opt:stage,'dev'}
+
+package:
+  include:
+    - vendor
+    - core
+  exclude:
+    - node_modules/**
+    - .gitignore
+    - .git/**
+    - test/**
+    - readme.md
+    - license
+    - .env*
+    - Makefile
+
+# Custom Variables
+custom:
+  dbUrl: ${env:MONGODB_URL}
+  dbName: ${env:DB_NAME}
+  topicName: ${env:SENDER_TOPIC}
+
+  # Environment Variables
+  environment:
+    ENV: ${self:provider.stage}
+    MONGODB_URL: ${self:custom.dbUrl}
+    DB_NAME: ${self:custom.dbName}
+
+functions:
+  sender:
+    handler: SendNotification
+    timeout: 3s
+    memorySize: 1024
+    events:
+      - event:
+          eventType: providers/cloud.pubsub/eventTypes/topic.publish
+          resource: projects/${self:provider.project}/topics/${self:custom.topicName}
+
+plugins:
+  - serverless-offline
+  - serverless-google-cloudfunctions
+  - serverless-dotenv-plugin
