@@ -64,12 +64,11 @@ func main() {
 
 		// Send Notification
 		res, err := webpush.SendNotification([]byte(subscriberData.Data), s, &subscriberData.Options)
-
-		fmt.Println("push response: ", res)
-
-		// TODO: find the correct code for unsubscribe
 		if err != nil {
-			fmt.Println("webpush error:", err)
+			fmt.Println("send err:", err)
+		}
+
+		if res.StatusCode == 410 {
 			_, err = subscriberCol.UpdateOne(
 				ctx,
 				bson.M{"_id": subscriberData.SubscriberID},

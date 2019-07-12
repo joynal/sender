@@ -52,10 +52,12 @@ func SendNotification(ctx context.Context, m PubSubMessage) error {
 	}
 
 	// Send Notification
-	_, err = webpush.SendNotification([]byte(subscriberData.Data), s, &subscriberData.Options)
-
-	// TODO: find the correct code for unsubscribe
+	res, err := webpush.SendNotification([]byte(subscriberData.Data), s, &subscriberData.Options)
 	if err != nil {
+		fmt.Println("send err:", err)
+	}
+
+	if res.StatusCode == 410 {
 		fmt.Println("webpush error:", err)
 		_, err = subscriberCol.UpdateOne(
 			dbCtx,
